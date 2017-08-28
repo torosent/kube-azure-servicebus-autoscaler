@@ -5,27 +5,26 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-
-	"github.com/Wattpad/kube-sqs-autoscaler/scale"
-	"github.com/Wattpad/kube-sqs-autoscaler/sqs"
+	"github.com/torosent/kube-azure-servicebus-autoscaler/azureservicebus"
+	"github.com/torosent/kube-azure-servicebus-autoscaler/scale"
 )
 
 var (
-	pollInterval        time.Duration
-	scaleDownCoolPeriod time.Duration
-	scaleUpCoolPeriod   time.Duration
-	scaleUpMessages     int
-	scaleDownMessages   int
-	maxPods             int
-	minPods             int
-	awsRegion           string
-
-	sqsQueueUrl              string
+	pollInterval             time.Duration
+	scaleDownCoolPeriod      time.Duration
+	scaleUpCoolPeriod        time.Duration
+	scaleUpMessages          int
+	scaleDownMessages        int
+	maxPods                  int
+	minPods                  int
 	kubernetesDeploymentName string
 	kubernetesNamespace      string
+	resourcegroup            string
+	queuename                string
+	namespace                string
 )
 
-func Run(p *scale.PodAutoScaler, sqs *sqs.SqsClient) {
+func Run(p *scale.PodAutoScaler) {
 	lastScaleUpTime := time.Now()
 	lastScaleDownTime := time.Now()
 
@@ -33,9 +32,9 @@ func Run(p *scale.PodAutoScaler, sqs *sqs.SqsClient) {
 		select {
 		case <-time.After(pollInterval):
 			{
-				numMessages, err := sqs.NumMessages()
+				numMessages, err := azureservicebus.NumMessages(resourcegroup, queuename, namespace)
 				if err != nil {
-					log.Errorf("Failed to get SQS messages: %v", err)
+					log.Errorf("Failed to get Azure Service Bus Queue messages: %v", err)
 					continue
 				}
 
@@ -76,21 +75,20 @@ func main() {
 	flag.DurationVar(&pollInterval, "poll-period", 5*time.Second, "The interval in seconds for checking if scaling is required")
 	flag.DurationVar(&scaleDownCoolPeriod, "scale-down-cool-down", 30*time.Second, "The cool down period for scaling down")
 	flag.DurationVar(&scaleUpCoolPeriod, "scale-up-cool-down", 10*time.Second, "The cool down period for scaling up")
-	flag.IntVar(&scaleUpMessages, "scale-up-messages", 100, "Number of sqs messages queued up required for scaling up")
+	flag.IntVar(&scaleUpMessages, "scale-up-messages", 100, "Number of azure service bus queue messages queued up required for scaling up")
 	flag.IntVar(&scaleDownMessages, "scale-down-messages", 10, "Number of messages required to scale down")
-	flag.IntVar(&maxPods, "max-pods", 5, "Max pods that kube-sqs-autoscaler can scale")
-	flag.IntVar(&minPods, "min-pods", 1, "Min pods that kube-sqs-autoscaler can scale")
-	flag.StringVar(&awsRegion, "aws-region", "", "Your AWS region")
-
-	flag.StringVar(&sqsQueueUrl, "sqs-queue-url", "", "The sqs queue url")
+	flag.IntVar(&maxPods, "max-pods", 5, "Max pods that kube-azure-servicebus-autoscaler can scale")
+	flag.IntVar(&minPods, "min-pods", 1, "Min pods that kube-azure-service-autoscaler can scale")
 	flag.StringVar(&kubernetesDeploymentName, "kubernetes-deployment", "", "Kubernetes Deployment to scale. This field is required")
 	flag.StringVar(&kubernetesNamespace, "kubernetes-namespace", "default", "The namespace your deployment is running in")
+
+	flag.StringVar(&resourcegroup, "resourcegroup", "", "Azure Service Bus resource group")
+	flag.StringVar(&queuename, "queuename", "", "Azure Service Bus queue name")
+	flag.StringVar(&namespace, "namespace", "", "Azure Service Bus namespace")
 
 	flag.Parse()
 
 	p := scale.NewPodAutoScaler(kubernetesDeploymentName, kubernetesNamespace, maxPods, minPods)
-	sqs := sqs.NewSqsClient(sqsQueueUrl, awsRegion)
-
-	log.Info("Starting kube-sqs-autoscaler")
-	Run(p, sqs)
+	log.Info("Starting kube-azure-service-autoscaler")
+	Run(p)
 }

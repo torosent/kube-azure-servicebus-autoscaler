@@ -1,13 +1,10 @@
 .PHONY: test clean compile build push
 
-IMAGE=wattpad/kube-sqs-autoscaler
-VERSION=v1.2.1
-
-test:
-	go test ./...
+IMAGE=torosent/kube-azure-servicebus-autoscaler
+VERSION=1.0.0
 
 clean:
-	rm -f kube-sqs-autoscaler
+	rm -f kube-azure-servicebus-autoscaler
 
 compile: clean
 	GOOS=linux go build .
