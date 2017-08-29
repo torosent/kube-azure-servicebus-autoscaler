@@ -1,4 +1,7 @@
 # kube-azure-servicebus-autoscaler
+
+:star2: This project is a fork of [kube-sqs-autoscaler](https://github.com/Wattpad/kube-sqs-autoscaler)  
+
 Kubernetes pod autoscaler based on queue size in Azure Service Bus Queues. It periodically retrieves the number of messages in your queue and scales pods accordingly.
 
 ## Setting up
