@@ -6,8 +6,9 @@ Kubernetes pod autoscaler based on queue size in Azure Service Bus Queues. It pe
 
 ## Setting up
 Setting up kube-azure-servicebus-autoscaler requires two steps:
-1) Deploying it as an incluster service in your cluster
-2) Adding Service Prinicipal credentials, subscription id and tenant id in Secrets so it can read the number of messages in your queues.
+1) Adding Service Prinicipal credentials, subscription id and tenant id in Secrets so it can read the number of messages in your queues.
+2) Deploying it as an incluster service in your cluster
+ 
 
 ### Deploying kube-azure-servicebus-autoscaler
 Deploying kube-azure-servicebus-autoscaler should be as simple as applying this deployment:
